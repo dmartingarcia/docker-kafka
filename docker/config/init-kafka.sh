@@ -1,1 +1,0 @@
-"${KAFKA_HOME}/bin/kafka-storage.sh" format -t "${KAFKA_CLUSTER_ID}"

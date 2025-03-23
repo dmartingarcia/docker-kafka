@@ -1,10 +1,10 @@
-# Kafka Cluster with KRaft
+# Kafka Cluster with KRaFT
 
-This project sets up a 3-node Kafka cluster using KRaft (without Zookeeper) in Docker.
+This project sets up a secure 3-node Kafka cluster using KRaFT (without Zookeeper) in Docker.
 
-## About KRaft
+## About KRaFT
 
-This cluster uses Kafka's KRaft (Kafka Raft) consensus mechanism, which replaced ZooKeeper as of Kafka 3.x. KRaft advantages:
+This cluster uses Kafka's KRaFT (Kafka Raft) consensus mechanism, which replaced ZooKeeper as of Kafka 3.x. KRaFT advantages:
 - Simplified architecture (no ZooKeeper dependency)
 - Better scalability
 - Improved stability
@@ -14,119 +14,137 @@ Each node in this cluster acts as both:
 - A controller (handling metadata)
 - A broker (handling data)
 
+## Architecture
+
+The cluster consists of 3 Kafka nodes:
+- kafka1: Accessible at localhost:9092 (broker) and 9093 (controller)
+- kafka2: Accessible at localhost:9094 (broker) and 9095 (controller)
+- kafka3: Accessible at localhost:9096 (broker) and 9097 (controller)
+
+Each node runs both broker and controller roles using KRaFT consensus protocol.
+
 ## Prerequisites
 
-- Docker
-- Docker Compose
+- Docker Engine 20.10+
+- Docker Compose v2.0+
 - Make (optional)
 
 ## Project Structure
 
 ```
-kafka-docker
-├── docker
-│   ├── kafka
-│   │   └── Dockerfile
-│   └── config
-│       └── kraft.properties
+kafka-docker/
+├── config/
+│   └── server.properties.template
+├── docker/
+│   └── Dockerfile
 ├── docker-compose.yml
+├── docker-entrypoint.sh
+├── .env
 ├── Makefile
 └── README.md
 ```
 
 ## Configuration
 
-The cluster consists of 3 Kafka nodes:
-- kafka-1: Accessible at localhost:29092
-- kafka-2: Accessible at localhost:29093
-- kafka-3: Accessible at localhost:29094
+The cluster configuration is managed through environment variables in the `docker-compose.yml` file:
+
+```properties
+KAFKA_CLUSTER_ID=KRaft-Cluster-1
+KAFKA_VERSION=4.0.0
+KAFKA_NUM_PARTITIONS=3
+KAFKA_REPLICATION_FACTOR=3
+KAFKA_MIN_INSYNC_REPLICAS=2
+```
+
+## Security Considerations
+
+> ⚠️ **Important Security Notice**: The current setup doesn't include authentication and encryption.
+> For production environments, you should enable:
+
+1. **TLS Encryption**:
+   - Generate SSL certificates for each broker
+   - Configure SSL listeners
+   - Enable SSL for inter-broker communication
+
+2. **Authentication**:
+   - Set up SASL authentication (PLAIN, SCRAM, or OAUTHBEARER)
+   - Configure ACLs for access control
+   - Enable audit logging
+
+Example secure configuration:
+
+```properties
+# Security settings to add in server.properties
+listeners=SASL_SSL://:9092,CONTROLLER://:9093
+security.protocol=SASL_SSL
+ssl.keystore.location=/path/to/kafka.keystore.jks
+ssl.keystore.password=${SSL_KEYSTORE_PASSWORD}
+ssl.key.password=${SSL_KEY_PASSWORD}
+sasl.enabled.mechanisms=SCRAM-SHA-512
+sasl.mechanism.controller.protocol=SCRAM-SHA-512
+```
 
 ## Getting Started
 
-1. **Clone the repository:**
+1. **Clone and setup:**
    ```bash
-   git clone <repository-url>
+   git clone git@github.com:dmartingarcia/docker-kafka.git
    cd kafka-docker
    ```
 
-2. **Build and Start:**
+2. **Start the cluster:**
    ```bash
-   make build    # Build the images
-   make run      # Start the cluster
+   make build    # Build images
+   make run      # Start cluster
    ```
 
-## Available Commands
+3. **Verify the setup:**
+   ```bash
+   make status   # Check container status
+   make logs     # View logs
+   ```
 
-### Cluster Management
+## Management Commands
+
+### Cluster Operations
 ```bash
-make build           # Build the Kafka Docker image
-make run             # Start the Kafka cluster
-make down            # Stop the cluster
-make restart         # Restart all containers
-make status          # Show containers status
-make logs            # View logs from all containers
-make clean           # Remove containers and networks
-make clean-volumes   # Remove Kafka data volumes
-make purge           # Complete cleanup (containers + volumes)
+make build           # Build images
+make run            # Start cluster
+make down           # Stop cluster
+make restart        # Restart cluster
+make status         # Show status
+make logs           # View logs
+make clean          # Remove containers
+make clean-volumes  # Remove volumes
+make purge          # Complete cleanup
 ```
 
 ### Kafka Operations
 ```bash
-# List all topics
-make topics
-
-# Create a topic
-make create-topic TOPIC=my-topic PARTITIONS=3 REPLICATION=3
-
-# Delete a topic
-make delete-topic TOPIC=my-topic
-
-# Show topic details
-make describe-topic TOPIC=my-topic
-
-# Produce messages to a topic
-make produce TOPIC=my-topic
-
-# Consume messages from a topic
-make consume TOPIC=my-topic              # From latest
-make consume TOPIC=my-topic FROM_BEGINNING=true  # From beginning
-
-# List consumer groups
-make describe-groups
-
-# Show cluster metadata
-make cluster-status
+make topics                    # List topics
+make create-topic TOPIC=test   # Create topic
+make describe-topic TOPIC=test # Show topic details
+make produce TOPIC=test        # Produce messages
+make consume TOPIC=test        # Consume messages
+make describe-groups          # List consumer groups
+make cluster-status          # Show metadata
 ```
 
-## Connecting from other services
+## Web UI Access
 
-To connect from other Docker Compose services, add this to your service's docker-compose.yml:
-
-```yaml
-networks:
-  external:
-    name: kafka-docker_kafka-network
-
-services:
-  your-service:
-    networks:
-      - kafka-network
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
-```
+The Kafka UI is available at http://localhost:8080, providing:
+- Cluster overview
+- Topic management
+- Message browser
+- Consumer group monitoring
 
 ## Data Persistence
 
-Kafka data is persisted using Docker named volumes:
-- `kafka-data-1`: Data for node 1
-- `kafka-data-2`: Data for node 2
-- `kafka-data-3`: Data for node 3
-
-To clean up the volumes:
-```bash
-make clean-volumes
-```
+Data is persisted in Docker volumes:
+- `kafka1_data`: Node 1 data
+- `kafka2_data`: Node 2 data
+- `kafka3_data`: Node 3 data
 
 ## License
 
-This project is licensed under the MIT License.
+MIT License - See LICENSE file for details

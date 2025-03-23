@@ -1,0 +1,14 @@
+node.id=${NODE_ID}
+process.roles=broker,controller
+listeners=PLAINTEXT://:${KAFKA_PORT},CONTROLLER://:${KAFKA_CONTROLLER_PORT}
+advertised.listeners=PLAINTEXT://${KAFKA_HOST}:${KAFKA_PORT}
+controller.quorum.voters=${KAFKA_CONTROLLER_QUORUM}
+controller.listener.names=CONTROLLER
+inter.broker.listener.name=PLAINTEXT
+log.dirs=${KAFKA_LOG_DIR}
+num.partitions=${KAFKA_NUM_PARTITIONS}
+default.replication.factor=${KAFKA_REPLICATION_FACTOR}
+min.insync.replicas=${KAFKA_MIN_INSYNC_REPLICAS}
+offsets.topic.replication.factor=${KAFKA_REPLICATION_FACTOR}
+transaction.state.log.replication.factor=${KAFKA_REPLICATION_FACTOR}
+transaction.state.log.min.isr=${KAFKA_MIN_INSYNC_REPLICAS}
