@@ -1,5 +1,3 @@
-# README.md
-
 # Kafka Cluster with KRaft
 
 This project sets up a 3-node Kafka cluster using KRaft (without Zookeeper) in Docker.
