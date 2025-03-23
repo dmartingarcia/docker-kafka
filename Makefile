@@ -2,8 +2,9 @@
 
 # Docker compose command - use docker-compose if docker compose is not available
 DOCKER_COMPOSE := docker compose
-KAFKA_CONTAINER := kafka-1
-KAFKA_BOOTSTRAP := kafka-1:9092
+KAFKA_CONTAINER := kafka1
+KAFKA_BOOTSTRAP := kafka1:9092
+KAFKA_BIN := /opt/kafka/bin
 
 .PHONY: help build up down restart status logs clean clean-volumes purge \
         topics create-topic delete-topic describe-topic produce consume describe-groups cluster-status
@@ -50,10 +51,10 @@ run: up ## Alias for 'up' command - starts the Kafka cluster
 # Kafka management commands
 
 topics: ## List all Kafka topics
-	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) kafka-topics.sh --list --bootstrap-server $(KAFKA_BOOTSTRAP)
+	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) $(KAFKA_BIN)/kafka-topics.sh --list --bootstrap-server $(KAFKA_BOOTSTRAP)
 
 create-topic: ## Create a topic. Usage: make create-topic TOPIC=topic-name PARTITIONS=3 REPLICATION=3
-	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) kafka-topics.sh \
+	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) $(KAFKA_BIN)/kafka-topics.sh \
 		--create \
 		--topic $(TOPIC) \
 		--bootstrap-server $(KAFKA_BOOTSTRAP) \
@@ -61,33 +62,33 @@ create-topic: ## Create a topic. Usage: make create-topic TOPIC=topic-name PARTI
 		--replication-factor ${REPLICATION:-3}
 
 delete-topic: ## Delete a topic. Usage: make delete-topic TOPIC=topic-name
-	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) kafka-topics.sh \
+	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) $(KAFKA_BIN)/kafka-topics.sh \
+		--bootstrap-server $(KAFKA_BOOTSTRAP) \
 		--delete \
-		--topic $(TOPIC) \
-		--bootstrap-server $(KAFKA_BOOTSTRAP)
+		--topic $(TOPIC)
 
 describe-topic: ## Show topic details. Usage: make describe-topic TOPIC=topic-name
-	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) kafka-topics.sh \
+	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) $(KAFKA_BIN)/kafka-topics.sh \
+		--bootstrap-server $(KAFKA_BOOTSTRAP) \
 		--describe \
-		--topic $(TOPIC) \
-		--bootstrap-server $(KAFKA_BOOTSTRAP)
+		--topic $(TOPIC)
 
 produce: ## Produce messages to a topic. Usage: make produce TOPIC=topic-name
-	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) kafka-console-producer.sh \
+	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) $(KAFKA_BIN)/kafka-console-producer.sh \
 		--topic $(TOPIC) \
 		--bootstrap-server $(KAFKA_BOOTSTRAP)
 
 consume: ## Consume messages from a topic. Usage: make consume TOPIC=topic-name [FROM_BEGINNING=true]
-	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) kafka-console-consumer.sh \
+	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) $(KAFKA_BIN)/kafka-console-consumer.sh \
 		--topic $(TOPIC) \
 		--bootstrap-server $(KAFKA_BOOTSTRAP) \
 		$(if $(FROM_BEGINNING),--from-beginning,)
 
 describe-groups: ## List and describe consumer groups
-	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) kafka-consumer-groups.sh \
+	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) $(KAFKA_BIN)/kafka-consumer-groups.sh \
 		--describe \
-		--bootstrap-server $(KAFKA_BOOTSTRAP)
+		--bootstrap-server $(KAFKA_BOOTSTRAP) --all-groups
 
 cluster-status: ## Show cluster status and controller information
-	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) kafka-metadata-shell.sh \
-		--snapshot /var/lib/kafka/data/__cluster_metadata-0/snapshot
+	$(DOCKER_COMPOSE) exec $(KAFKA_CONTAINER) $(KAFKA_BIN)/kafka-topics.sh \
+		--bootstrap-server $(KAFKA_BOOTSTRAP) --describe
