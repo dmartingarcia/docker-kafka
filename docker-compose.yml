@@ -1,0 +1,57 @@
+version: '3.8'
+
+x-kafka-common: &kafka-common
+  build:
+    context: ./docker/kafka
+    dockerfile: Dockerfile
+  networks:
+    - kafka-network
+  volumes:
+    - ./docker/config/kraft.properties:/etc/kafka/kraft.properties
+    - kafka-data-${KAFKA_NODE_ID}:/var/lib/kafka/data
+  environment: &kafka-environment
+    KAFKA_CLUSTER_ID: "kafka-cluster-1"
+    KRAFT_CONTAINER_HOST_NAME: "kafka-${KAFKA_NODE_ID}"
+
+services:
+  kafka-1:
+    <<: *kafka-common
+    hostname: kafka-1
+    ports:
+      - "29092:29092"
+    environment:
+      <<: *kafka-environment
+      KAFKA_NODE_ID: 1
+      KAFKA_EXTERNAL_PORT: 29092
+
+  kafka-2:
+    <<: *kafka-common
+    hostname: kafka-2
+    ports:
+      - "29093:29093"
+    environment:
+      <<: *kafka-environment
+      KAFKA_NODE_ID: 2
+      KAFKA_EXTERNAL_PORT: 29093
+
+  kafka-3:
+    <<: *kafka-common
+    hostname: kafka-3
+    ports:
+      - "29094:29094"
+    environment:
+      <<: *kafka-environment
+      KAFKA_NODE_ID: 3
+      KAFKA_EXTERNAL_PORT: 29094
+
+networks:
+  kafka-network:
+    driver: bridge
+
+volumes:
+  kafka-data-1:
+    name: kafka-data-1
+  kafka-data-2:
+    name: kafka-data-2
+  kafka-data-3:
+    name: kafka-data-3
